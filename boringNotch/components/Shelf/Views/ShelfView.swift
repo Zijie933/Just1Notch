@@ -7,23 +7,33 @@
 
 import SwiftUI
 import AppKit
+import Defaults
 
 struct ShelfView: View {
     @EnvironmentObject var vm: BoringViewModel
     @StateObject var tvm = ShelfStateViewModel.shared
     @StateObject var selection = ShelfSelectionModel.shared
     @StateObject private var quickLookService = QuickLookService()
+    @Default(.showQuickShare) var showQuickShare
+    @Default(.showTrashDropZone) var showTrashDropZone
     private let spacing: CGFloat = 8
 
     var body: some View {
         HStack(spacing: 12) {
-            FileShareView()
-                .aspectRatio(1, contentMode: .fit)
-                .environmentObject(vm)
+            if showQuickShare {
+                FileShareView()
+                    .aspectRatio(1, contentMode: .fit)
+                    .environmentObject(vm)
+            }
             panel
                 .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
                     handleDrop(providers: providers)
                 }
+            if showTrashDropZone {
+                TrashDropZoneView()
+                    .aspectRatio(1, contentMode: .fit)
+                    .environmentObject(vm)
+            }
         }
         // Bind Quick Look to shelf selection
         .onChange(of: selection.selectedIDs) {

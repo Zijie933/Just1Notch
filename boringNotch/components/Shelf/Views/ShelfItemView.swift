@@ -47,9 +47,10 @@ struct ShelfItemView: View {
                 DraggableClickHandler(
                     item: item,
                     viewModel: viewModel,
+                    vm: vm,
                     cachedPreviewImage: $cachedPreviewImage,
                     dragPreviewContent: {
-                        DragPreviewView(thumbnail: viewModel.thumbnail ?? item.icon, displayName: item.displayName)
+                        DragPreviewView(thumbnail: item.icon, displayName: item.displayName)
                     },
                     onRightClick: viewModel.handleRightClick,
                     onClick: { event, nsview in
@@ -72,21 +73,14 @@ struct ShelfItemView: View {
             }
         }
         .onAppear {
-            Task { 
-                await viewModel.loadThumbnail()
-                // Pre-render drag preview once on appear
-                if cachedPreviewImage == nil {
+            // Pre-render drag preview once on appear
+            if cachedPreviewImage == nil {
+                Task {
                     cachedPreviewImage = await renderDragPreview()
                 }
             }
             viewModel.onQuickLookRequest = { urls in
                 quickLookService.show(urls: urls, selectFirst: true)
-            }
-        }
-        .onChange(of: viewModel.thumbnail) { _, _ in
-            // Invalidate cached preview when thumbnail changes
-            Task {
-                cachedPreviewImage = await renderDragPreview()
             }
         }
         .quickLookPresenter(using: quickLookService)
@@ -95,7 +89,7 @@ struct ShelfItemView: View {
     // MARK: - View Components
 
     private var iconView: some View {
-        Image(nsImage: viewModel.thumbnail ?? item.icon)
+        Image(nsImage: item.icon)
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 56, height: 56)
@@ -159,10 +153,10 @@ struct ShelfItemView: View {
     
     @MainActor
     private func renderDragPreview() async -> NSImage {
-        let content = DragPreviewView(thumbnail: viewModel.thumbnail ?? item.icon, displayName: item.displayName)
+        let content = DragPreviewView(thumbnail: item.icon, displayName: item.displayName)
         let renderer = ImageRenderer(content: content)
         renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        return renderer.nsImage ?? (viewModel.thumbnail ?? item.icon)
+        return renderer.nsImage ?? item.icon
     }
 
     
@@ -172,6 +166,7 @@ struct ShelfItemView: View {
 private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
     let item: ShelfItem
     let viewModel: ShelfItemViewModel
+    let vm: BoringViewModel
     @Binding var cachedPreviewImage: NSImage?
     @ViewBuilder let dragPreviewContent: () -> Content
     let onRightClick: (NSEvent, NSView) -> Void
@@ -181,6 +176,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         let view = DraggableClickView()
         view.item = item
         view.viewModel = viewModel
+        view.vm = vm
         view.dragPreviewImage = cachedPreviewImage ?? renderDragPreview()
         view.onRightClick = onRightClick
         view.onClick = onClick
@@ -190,6 +186,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
     func updateNSView(_ nsView: DraggableClickView, context: Context) {
         nsView.item = item
         nsView.viewModel = viewModel
+        nsView.vm = vm
         // Only update preview if cached version is available
         if let cached = cachedPreviewImage {
             nsView.dragPreviewImage = cached
@@ -208,12 +205,13 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         }
         
         // Fallback to icon if rendering fails
-        return viewModel.thumbnail ?? item.icon
+        return item.icon
     }
     
     final class DraggableClickView: NSView, NSDraggingSource {
         var item: ShelfItem!
         weak var viewModel: ShelfItemViewModel?
+        weak var vm: BoringViewModel?
         var dragPreviewImage: NSImage?
         var onRightClick: ((NSEvent, NSView) -> Void)?
         var onClick: ((NSEvent, NSView) -> Void)?
@@ -291,12 +289,11 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
             beginDraggingSession(with: draggingItems, event: event, source: self)
         }
         
-        private func createPasteboardItem(for item: ShelfItem) -> NSPasteboardItem? {
-            let pasteboardItem = NSPasteboardItem()
-
+        private func createPasteboardItem(for item: ShelfItem) -> NSPasteboardWriting? {
             switch item.kind {
             case .file:
                 guard let url = ShelfStateViewModel.shared.resolveAndUpdateBookmark(for: item) else {
+                    let pasteboardItem = NSPasteboardItem()
                     pasteboardItem.setString(item.displayName, forType: .string)
                     return pasteboardItem
                 }
@@ -304,18 +301,21 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
                 // Start accessing security-scoped resource and keep it active during drag
                 if url.startAccessingSecurityScopedResource() {
                     draggedURLs.append(url)
-                    NSLog("🔐 Started security-scoped access for drag: \(url.path)")
                 }
                 
+                // Use NSPasteboardItem with proper file URL type
+                let pasteboardItem = NSPasteboardItem()
                 pasteboardItem.setString(url.absoluteString, forType: .fileURL)
                 pasteboardItem.setString(url.path, forType: .string)
                 return pasteboardItem
 
             case .text(let string):
+                let pasteboardItem = NSPasteboardItem()
                 pasteboardItem.setString(string, forType: .string)
                 return pasteboardItem
 
             case .link(let url):
+                let pasteboardItem = NSPasteboardItem()
                 pasteboardItem.setString(url.absoluteString, forType: .URL)
                 pasteboardItem.setString(url.absoluteString, forType: .string)
                 return pasteboardItem
@@ -342,16 +342,27 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         
         func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
             ShelfSelectionModel.shared.beginDrag()
+            
+            // 通知 ViewModel 开始拖拽，防止刘海关闭
+            DispatchQueue.main.async {
+                self.vm?.isDraggingFromShelf = true
+            }
         }
         
         
         func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
             ShelfSelectionModel.shared.endDrag()
+            
+            // 通知 ViewModel 拖拽结束
+            DispatchQueue.main.async {
+                self.vm?.isDraggingFromShelf = false
+                // 拖拽结束后，如果鼠标不在刘海内，触发关闭检查
+                self.vm?.close()
+            }
 
             // Stop accessing security-scoped resources after drag completes
             for url in draggedURLs {
                 url.stopAccessingSecurityScopedResource()
-                NSLog("🔐 Stopped security-scoped access after drag: \(url.path)")
             }
             draggedURLs.removeAll()
 

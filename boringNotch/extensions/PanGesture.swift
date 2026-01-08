@@ -32,6 +32,120 @@ extension View {
             )
             .background(ScrollMonitor(direction: direction, threshold: threshold, action: action))
     }
+    
+    /// 水平滑动手势，只触发一次，适用于 tab 切换
+    func horizontalSwipeGesture(threshold: CGFloat = 20, action: @escaping (PanDirection) -> Void) -> some View {
+        self.background(HorizontalSwipeMonitor(threshold: threshold, action: action))
+    }
+}
+
+/// 专门用于水平滑动切换的监听器，只触发一次
+private struct HorizontalSwipeMonitor: NSViewRepresentable {
+    let threshold: CGFloat
+    let action: (PanDirection) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        context.coordinator.installMonitor(on: view)
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) { coordinator.removeMonitor() }
+
+    func makeCoordinator() -> Coordinator { 
+        Coordinator(threshold: threshold, action: action) 
+    }
+
+    @MainActor final class Coordinator: NSObject {
+        private let threshold: CGFloat
+        private let action: (PanDirection) -> Void
+        private var monitor: Any?
+        private var accumulated: CGFloat = 0
+        private var triggered = false
+        private var gestureStarted = false
+
+        init(threshold: CGFloat, action: @escaping (PanDirection) -> Void) {
+            self.threshold = threshold
+            self.action = action
+        }
+
+        func installMonitor(on view: NSView) {
+            removeMonitor()
+            monitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self, weak view] event in
+                guard let self = self, event.window === view?.window else { return event }
+                self.handleScroll(event)
+                return event
+            }
+        }
+
+        func removeMonitor() {
+            if let monitor = monitor {
+                NSEvent.removeMonitor(monitor)
+                self.monitor = nil
+            }
+            resetState()
+        }
+        
+        private func resetState() {
+            accumulated = 0
+            triggered = false
+            gestureStarted = false
+        }
+
+        private func handleScroll(_ event: NSEvent) {
+            // 手势开始
+            if event.phase == .began {
+                resetState()
+                gestureStarted = true
+                return
+            }
+            
+            // 手势结束（包括惯性结束）- 重置状态
+            if event.phase == .ended || event.phase == .cancelled {
+                // 延迟重置，等待惯性滚动结束
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.resetState()
+                }
+                return
+            }
+            
+            // 惯性滚动阶段结束
+            if event.momentumPhase == .ended {
+                resetState()
+                return
+            }
+            
+            // 已经触发过了，忽略后续所有事件（包括惯性）
+            guard !triggered else { return }
+            
+            // 忽略惯性滚动
+            guard event.momentumPhase == .none || event.momentumPhase == [] else { return }
+            
+            // 检查是否主要是水平滚动
+            let absDX = abs(event.scrollingDeltaX)
+            let absDY = abs(event.scrollingDeltaY)
+            guard absDX >= absDY * 1.5 else { return }
+            
+            let deltaX = event.scrollingDeltaX
+            
+            // 累积同方向的滚动量
+            if (accumulated >= 0 && deltaX >= 0) || (accumulated <= 0 && deltaX <= 0) {
+                accumulated += deltaX
+            } else {
+                // 方向改变，重置
+                accumulated = deltaX
+            }
+            
+            // 检查是否达到阈值
+            if accumulated > threshold {
+                triggered = true
+                action(.right)
+            } else if accumulated < -threshold {
+                triggered = true
+                action(.left)
+            }
+        }
+    }
 }
 
 private struct ScrollMonitor: NSViewRepresentable {

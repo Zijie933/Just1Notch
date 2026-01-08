@@ -119,8 +119,12 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
     }
     
     var fileURL: URL? {
-        guard case .file = kind else { return nil }
-        return ShelfStateViewModel.shared.resolveFileURL(for: self)
+        switch kind {
+        case .file:
+            return ShelfStateViewModel.shared.resolveFileURL(for: self)
+        default:
+            return nil
+        }
     }
     
     var URL: URL? {
@@ -130,13 +134,15 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
     }
     
     var icon: NSImage {
-        guard case .file = kind else {
+        switch kind {
+        case .file:
+            if let resolvedURL = ShelfStateViewModel.shared.resolveFileURL(for: self) {
+                return NSWorkspace.shared.icon(forFile: resolvedURL.path)
+            }
+            return Self.thumbnailSymbolImage(systemName: kind.iconSymbolName) ?? NSImage()
+        case .text, .link:
             return Self.thumbnailSymbolImage(systemName: kind.iconSymbolName) ?? NSImage()
         }
-        if let resolvedURL = ShelfStateViewModel.shared.resolveFileURL(for: self) {
-            return NSWorkspace.shared.icon(forFile: resolvedURL.path)
-        }
-        return NSImage()
     }
     
 

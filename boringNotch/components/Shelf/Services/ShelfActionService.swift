@@ -27,17 +27,25 @@ enum ShelfActionService {
     }
 
     static func reveal(_ item: ShelfItem) {
-        guard case .file(let bookmark) = item.kind else { return }
-        handleBookmarkedFile(bookmark) { url in
-            NSWorkspace.shared.activateFileViewerSelecting([url])
+        switch item.kind {
+        case .file(let bookmark):
+            handleBookmarkedFile(bookmark) { url in
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            }
+        default:
+            return
         }
     }
 
     static func copyPath(_ item: ShelfItem) {
-        guard case .file(let bookmark) = item.kind else { return }
-        handleBookmarkedFile(bookmark) { url in
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(url.path, forType: .string)
+        switch item.kind {
+        case .file(let bookmark):
+            handleBookmarkedFile(bookmark) { url in
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(url.path, forType: .string)
+            }
+        default:
+            return
         }
     }
 

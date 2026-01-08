@@ -14,12 +14,30 @@ let batterySneakSize: CGSize = .init(width: 160, height: 1)
 
 let shadowPadding: CGFloat = 20
 let openNotchSize: CGSize = .init(width: 640, height: 190)
+let compactOpenNotchSize: CGSize = .init(width: 300, height: 140) // 紧凑模式，用于只有小功能时
 let windowSize: CGSize = .init(width: openNotchSize.width, height: openNotchSize.height + shadowPadding)
 let cornerRadiusInsets: (opened: (top: CGFloat, bottom: CGFloat), closed: (top: CGFloat, bottom: CGFloat)) = (opened: (top: 19, bottom: 24), closed: (top: 6, bottom: 14))
 
 enum MusicPlayerImageSizes {
     static let cornerRadiusInset: (opened: CGFloat, closed: CGFloat) = (opened: 13.0, closed: 4.0)
     static let size = (opened: CGSize(width: 90, height: 90), closed: CGSize(width: 20, height: 20))
+}
+
+/// 根据启用的功能和当前视图计算打开时的刘海尺寸
+@MainActor func getOpenNotchSize(for view: NotchViews = .home) -> CGSize {
+    // 非 home 视图始终使用完整尺寸
+    if view != .home {
+        return openNotchSize
+    }
+    
+    let hasLargeContent = Defaults[.showMusicPlayer] || Defaults[.showCalendar] || Defaults[.showMirror]
+    
+    if hasLargeContent {
+        return openNotchSize
+    } else {
+        // 只有小功能（如 JSON 查看器）时使用紧凑尺寸
+        return compactOpenNotchSize
+    }
 }
 
 @MainActor func getScreenFrame(_ screenUUID: String? = nil) -> CGRect? {

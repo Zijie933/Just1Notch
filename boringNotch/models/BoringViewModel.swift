@@ -28,6 +28,7 @@ class BoringViewModel: NSObject, ObservableObject {
     
     @Published var hideOnClosed: Bool = true
 
+    @Published var isDraggingFromShelf: Bool = false
     @Published var edgeAutoOpenActive: Bool = false
     @Published var isHoveringCalendar: Bool = false
     @Published var isBatteryPopoverActive: Bool = false
@@ -64,6 +65,14 @@ class BoringViewModel: NSObject, ObservableObject {
                 shelf || drag || general
             }
             .assign(to: \.anyDropZoneTargeting, on: self)
+            .store(in: &cancellables)
+        
+        // 监听视图切换，动态调整刘海尺寸
+        coordinator.$currentView
+            .sink { [weak self] newView in
+                guard let self = self, self.notchState == .open else { return }
+                self.notchSize = getOpenNotchSize(for: newView)
+            }
             .store(in: &cancellables)
         
         setupDetectorObserver()
@@ -190,16 +199,24 @@ class BoringViewModel: NSObject, ObservableObject {
     }
 
     func open() {
-        self.notchSize = openNotchSize
+        // 如果设置了「有项目时默认打开寄存区」且寄存区有文件，默认打开寄存区页面
+        if Defaults[.openShelfWhenHasItems] && !ShelfStateViewModel.shared.isEmpty {
+            coordinator.currentView = .shelf
+        } else if !coordinator.openLastTabByDefault {
+            coordinator.currentView = .home
+        }
+        
+        self.notchSize = getOpenNotchSize(for: coordinator.currentView)
         self.notchState = .open
         
         // Force music information update when notch is opened
         MusicManager.shared.forceUpdate()
     }
 
-    func close() {
-        // Do not close while a share picker or sharing service is active
-        if SharingStateManager.shared.preventNotchClose {
+    func close(force: Bool = false) {
+        // 如果不是强制关闭，则检查是否满足“不可关闭”条件：
+        // 1. 正在分享 2. 正在从寄存区拖拽 3. 鼠标仍然在刘海区域内
+        if !force && (SharingStateManager.shared.preventNotchClose || isDraggingFromShelf || isMouseHovering()) {
             return
         }
         self.notchSize = getClosedNotchSize(screenUUID: self.screenUUID)

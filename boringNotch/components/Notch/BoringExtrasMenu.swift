@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct BoringLargeButtons: View {
     var action: () -> Void
@@ -29,21 +30,42 @@ struct BoringLargeButtons: View {
 
 struct BoringExtrasMenu : View {
     @ObservedObject var vm: BoringViewModel
+    @Default(.showJSONViewer) var showJSONViewer
     
     var body: some View {
         VStack{
             HStack(spacing: 20)  {
-                hide
+                if showJSONViewer {
+                    jsonViewer
+                }
                 settings
                 close
             }
         }
     }
     
+    var jsonViewer: some View {
+        BoringLargeButtons(
+            action: {
+                // 从剪贴板获取文本并打开 JSON 查看器
+                let clipboardText = NSPasteboard.general.string(forType: .string) ?? ""
+                Task { @MainActor in
+                    if clipboardText.isEmpty {
+                        JSONViewerWindowController.shared.showWindow(with: "剪贴板为空，请先复制 JSON 文本")
+                    } else {
+                        JSONViewerWindowController.shared.showWindow(with: clipboardText)
+                    }
+                }
+            },
+            icon: Image(systemName: "doc.text.magnifyingglass"),
+            title: "JSON"
+        )
+    }
+    
     var github: some View {
         BoringLargeButtons(
             action: {
-                if let url = URL(string: "https://github.com/TheBoredTeam/boring.notch") {
+                if let url = URL(string: "https://github.com/Zijie933") {
                     NSWorkspace.shared.open(url)
                 }
             },

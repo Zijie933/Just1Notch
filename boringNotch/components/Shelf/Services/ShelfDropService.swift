@@ -11,15 +11,22 @@ import UniformTypeIdentifiers
 
 struct ShelfDropService {
     static func items(from providers: [NSItemProvider]) async -> [ShelfItem] {
-        var results: [ShelfItem] = []
-
-        for provider in providers {
-            if let item = await processProvider(provider) {
-                results.append(item)
+        // 使用并行处理，避免顺序处理导致的阻塞
+        return await withTaskGroup(of: ShelfItem?.self) { group in
+            for provider in providers {
+                group.addTask {
+                    await processProvider(provider)
+                }
             }
+            
+            var results: [ShelfItem] = []
+            for await item in group {
+                if let item = item {
+                    results.append(item)
+                }
+            }
+            return results
         }
-
-        return results
     }
     
     private static func processProvider(_ provider: NSItemProvider) async -> ShelfItem? {
@@ -42,6 +49,13 @@ struct ShelfDropService {
         }
         
         if let text = await provider.extractText() {
+            // Check if the text is actually a file URL that we should handle as a file
+            if text.hasPrefix("file://"), let url = URL(string: text), url.isFileURL {
+                if let bookmark = createBookmark(for: url) {
+                    return await ShelfItem(kind: .file(bookmark: bookmark), isTemporary: false)
+                }
+            }
+            
             return await ShelfItem(kind: .text(string: text), isTemporary: false)
         }
         

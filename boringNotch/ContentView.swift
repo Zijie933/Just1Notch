@@ -134,7 +134,7 @@ struct ContentView: View {
                     .onTapGesture {
                         doOpen()
                     }
-                    .conditionalModifier(Defaults[.enableGestures]) { view in
+                    .conditionalModifier(Defaults[.openGestureEnabled] && Defaults[.enableGestures]) { view in
                         view
                             .panGesture(direction: .down) { translation, phase in
                                 handleDownGesture(translation: translation, phase: phase)
@@ -144,6 +144,12 @@ struct ContentView: View {
                         view
                             .panGesture(direction: .up) { translation, phase in
                                 handleUpGesture(translation: translation, phase: phase)
+                            }
+                    }
+                    .conditionalModifier(Defaults[.tabSwitchGestureEnabled] && Defaults[.enableGestures]) { view in
+                        view
+                            .horizontalSwipeGesture(threshold: 20) { direction in
+                                handleTabSwipe(direction: direction)
                             }
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .sharingDidFinish)) { _ in
@@ -217,7 +223,9 @@ struct ContentView: View {
 
             if isTargeted {
                 if vm.notchState == .closed {
-                    coordinator.currentView = .shelf
+                    if Defaults[.openShelfOnDrop] {
+                        coordinator.currentView = .shelf
+                    }
                     doOpen()
                 }
                 return
@@ -599,11 +607,28 @@ struct ContentView: View {
             }
             if !SharingStateManager.shared.preventNotchClose { 
                 gestureProgress = .zero
-                vm.close()
+                vm.close(force: true)
             }
 
             if Defaults[.enableHaptics] {
                 haptics.toggle()
+            }
+        }
+    }
+
+    private func handleTabSwipe(direction: PanDirection) {
+        guard vm.notchState == .open else { return }
+        
+        if Defaults[.enableHaptics] {
+            haptics.toggle()
+        }
+        
+        withAnimation(.smooth(duration: 0.25)) {
+            switch coordinator.currentView {
+            case .home:
+                coordinator.currentView = .shelf
+            case .shelf:
+                coordinator.currentView = .home
             }
         }
     }

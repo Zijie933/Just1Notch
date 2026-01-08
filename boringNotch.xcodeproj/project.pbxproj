@@ -142,6 +142,9 @@
 		B1F0A0022E60000100000001 /* BrightnessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A0012E60000100000001 /* BrightnessManager.swift */; };
 		B1F747F92EC7E94000F841DB /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F747F82EC7E94000F841DB /* LottieView.swift */; };
 		B1FEB4992C7686630066EBBC /* PanGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1FEB4982C7686630066EBBC /* PanGesture.swift */; };
+		BE1954182F0D263800E45CB1 /* TrashDropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1954172F0D263800E45CB1 /* TrashDropZoneView.swift */; };
+		BE9DE74B2F0E81EB00B5D799 /* PasteInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9DE7492F0E81EB00B5D799 /* PasteInputView.swift */; };
+		BE9DE74D2F0E827900B5D799 /* JSONViewerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9DE74C2F0E827900B5D799 /* JSONViewerWindow.swift */; };
 		F38DE6482D8243E7008B5C6D /* BatteryActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -308,6 +311,9 @@
 		B1F0A0012E60000100000001 /* BrightnessManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessManager.swift; sourceTree = "<group>"; };
 		B1F747F82EC7E94000F841DB /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		B1FEB4982C7686630066EBBC /* PanGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanGesture.swift; sourceTree = "<group>"; };
+		BE1954172F0D263800E45CB1 /* TrashDropZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashDropZoneView.swift; sourceTree = "<group>"; };
+		BE9DE7492F0E81EB00B5D799 /* PasteInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteInputView.swift; sourceTree = "<group>"; };
+		BE9DE74C2F0E827900B5D799 /* JSONViewerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONViewerWindow.swift; sourceTree = "<group>"; };
 		F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryActivityManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -395,6 +401,7 @@
 		1113ABC42E80E27000EC13B2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				BE1954172F0D263800E45CB1 /* TrashDropZoneView.swift */,
 				11F747CD2EC75CEA00F841DB /* DragPreviewView.swift */,
 				110029292E8691B400035A57 /* FileShareView.swift */,
 				1113ABC32E80E27000EC13B2 /* ShelfItemView.swift */,
@@ -486,6 +493,8 @@
 		1471639B2C5D362F0068B555 /* components */ = {
 			isa = PBXGroup;
 			children = (
+				BE9DE74C2F0E827900B5D799 /* JSONViewerWindow.swift */,
+				BE9DE7492F0E81EB00B5D799 /* PasteInputView.swift */,
 				B141C23B2CA5F50900AC8CC8 /* Onboarding */,
 				B1C448992C97375A001F0858 /* Tips */,
 				14C08BB72C8DE49E000F8AA0 /* Calendar */,
@@ -976,9 +985,11 @@
 				B17266E32C65F7FB0031BA0D /* WhatsNewView.swift in Sources */,
 				14C08BB62C8DE42D000F8AA0 /* CalendarManager.swift in Sources */,
 				14D570CD2C5F4BB70011E668 /* BoringBattery.swift in Sources */,
+				BE9DE74B2F0E81EB00B5D799 /* PasteInputView.swift in Sources */,
 				B10F84A32C6C9596009F3026 /* TestView.swift in Sources */,
 				1443E7F32C609DCE0027C1FC /* matters.swift in Sources */,
 				11C5E3162DFE88510065821E /* SettingsView.swift in Sources */,
+				BE9DE74D2F0E827900B5D799 /* JSONViewerWindow.swift in Sources */,
 				1153BD932D986E4300979FB0 /* AppleMusicController.swift in Sources */,
 				11C5E3132DFE85970065821E /* SettingsWindowController.swift in Sources */,
 				110029272E84FD4C00035A57 /* TemporaryFileStorageService.swift in Sources */,
@@ -1020,6 +1031,7 @@
 				1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */,
 				11CFC6632E09918400748C80 /* MusicControllerSelectionView.swift in Sources */,
 				B1F0A0022E60000100000001 /* BrightnessManager.swift in Sources */,
+				BE1954182F0D263800E45CB1 /* TrashDropZoneView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1221,7 +1233,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 271;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1234,7 +1246,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = boringNotch/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TheBoringNotch;
+				INFOPLIST_KEY_CFBundleDisplayName = Just1Notch;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -1248,7 +1260,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.7.3;
+				MARKETING_VERSION = 0.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1275,7 +1287,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 271;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1287,7 +1299,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = boringNotch/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TheBoringNotch;
+				INFOPLIST_KEY_CFBundleDisplayName = Just1Notch;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -1301,7 +1313,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.7.3;
+				MARKETING_VERSION = 0.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

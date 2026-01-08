@@ -30,7 +30,7 @@ struct TabSelectionView: View {
                             coordinator.currentView = tab.view
                         }
                     }
-                    .frame(height: 26)
+                    .frame(height: 32) // 从 26 增加到 32，增大垂直识别面积
                     .foregroundStyle(tab.view == coordinator.currentView ? .white : .gray)
                     .background {
                         if tab.view == coordinator.currentView {

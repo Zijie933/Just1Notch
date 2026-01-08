@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 48 48">
+  <!-- 右半边 - 浅灰色 -->
+  <path d="M24 1 L43 1 Q47 1 47 5 L47 43 Q47 47 43 47 L24 47 L24 1 Z" 
+        fill="#e8e8e8"/>
+  
+  <!-- 左半边 - 蓝色 -->
+  <path d="M5 1 L24 1 L24 47 L5 47 Q1 47 1 43 L1 5 Q1 1 5 1 Z" 
+        fill="#29b6f6"/>
+  
+  <!-- 顶部刘海 (Notch) -->
+  <path d="M16 1 
+           Q17 1 17 2
+           L17 6
+           Q17 9 20 9
+           L28 9
+           Q31 9 31 6
+           L31 2
+           Q31 1 32 1 Z" 
+        fill="#1a1a1a"/>
+  
+  <!-- 左眼 -->
+  <rect x="10.5" y="15" width="3.5" height="9" rx="1.75" fill="#37474f"/>
+  
+  <!-- 右眼 -->
+  <rect x="34" y="15" width="3.5" height="9" rx="1.75" fill="#37474f"/>
+  
+  <!-- "1" 作为鼻子 - 顺时针155度 -->
+  <text x="24" y="29" 
+        font-family="Georgia, Times New Roman, serif" 
+        font-size="14" 
+        font-style="italic"
+        font-weight="600" 
+        fill="#37474f" 
+        text-anchor="middle"
+        transform="rotate(155, 24, 25)">1</text>
+  
+  <!-- 微笑 -->
+  <path d="M13 35 Q24 43 35 35" 
+        stroke="#37474f" 
+        stroke-width="3" 
+        stroke-linecap="round"
+        fill="none"/>
+</svg>

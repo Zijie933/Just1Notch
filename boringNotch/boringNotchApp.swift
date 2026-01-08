@@ -402,7 +402,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     self.closeNotchTask = task
                 case .open:
                     await MainActor.run {
-                        viewModel.close()
+                        viewModel.close(force: true)
                     }
                 }
             }

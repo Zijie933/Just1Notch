@@ -27,12 +27,10 @@ extension NSItemProvider {
     
     /// Loads raw data for the given type identifier
     func loadData() async -> Data? {
-        NSLog(String(describing: self.registeredTypeIdentifiers))
         guard hasItemConformingToTypeIdentifier(UTType.data.identifier) else { return nil }
         return await withCheckedContinuation { (cont: CheckedContinuation<Data?, Never>) in
             loadItem(forTypeIdentifier: UTType.data.identifier, options: nil) { item, error in
-                if let error = error {
-                    print("Error loading data for type \(UTType.data.identifier): \(error.localizedDescription)")
+                if error != nil {
                     cont.resume(returning: nil)
                     return
                 }
@@ -49,19 +47,14 @@ extension NSItemProvider {
                     do {
                         // Delete the file first
                         try fileManager.removeItem(at: url)
-                        print("Deleted file: \(url.path)")
 
                         // Check folder contents
                         let contents = try fileManager.contentsOfDirectory(atPath: folderURL.path)
                         if contents.isEmpty {
                             try fileManager.removeItem(at: folderURL)
-                            print("Folder was empty, deleted folder: \(folderURL.path)")
-                        } else {
-                            print("Folder not deleted — it still contains \(contents.count) item(s).")
                         }
-
                     } catch {
-                        print("Error: \(error.localizedDescription)")
+                        // Silently ignore cleanup errors
                     }
                     
                     cont.resume(returning: data)
@@ -88,9 +81,24 @@ extension NSItemProvider {
     }
 
     func extractText() async -> String? {
-        let textTypes = [UTType.utf8PlainText.identifier, UTType.plainText.identifier]
+        // Support more text-like types including source code
+        let textTypes = [
+            UTType.utf8PlainText.identifier,
+            UTType.plainText.identifier,
+            "public.swift-source",
+            "public.source-code",
+            "public.text",
+            UTType.text.identifier
+        ]
 
         for typeIdentifier in textTypes where self.hasItemConformingToTypeIdentifier(typeIdentifier) {
+            if let text = await loadText(typeIdentifier: typeIdentifier) {
+                return text
+            }
+        }
+        
+        // Fallback: try all registered types
+        for typeIdentifier in self.registeredTypeIdentifiers {
             if let text = await loadText(typeIdentifier: typeIdentifier) {
                 return text
             }
@@ -103,8 +111,7 @@ extension NSItemProvider {
     func loadFileURL(typeIdentifier: String) async -> URL? {
         await withCheckedContinuation { (cont: CheckedContinuation<URL?, Never>) in
             self.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, error in
-                if let error = error {
-                    print("❌ Error loading item for type \(typeIdentifier): \(error.localizedDescription)")
+                if error != nil {
                     cont.resume(returning: nil)
                     return
                 }
@@ -180,13 +187,12 @@ extension NSItemProvider {
     func loadText(typeIdentifier: String) async -> String? {
         await withCheckedContinuation { (cont: CheckedContinuation<String?, Never>) in
             self.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, error in
-                if error != nil {
-                    cont.resume(returning: nil)
-                    return
-                }
-
+                // Try to extract text even if there's an error, as some errors are non-fatal
                 if let string = item as? String {
                     cont.resume(returning: string)
+                } else if let url = item as? URL {
+                    // URL object - return its string representation
+                    cont.resume(returning: url.absoluteString)
                 } else if let data = item as? Data,
                           let string = String(data: data, encoding: .utf8) {
                     cont.resume(returning: string)

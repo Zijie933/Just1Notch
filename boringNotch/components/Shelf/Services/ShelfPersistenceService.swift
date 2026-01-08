@@ -41,31 +41,23 @@ final class ShelfPersistenceService {
         do {
             // Parse as JSON array to get individual item data
             guard let jsonArray = try JSONSerialization.jsonObject(with: data) as? [Any] else {
-                print("⚠️ Shelf persistence file is not a valid JSON array")
                 return []
             }
             
             var validItems: [ShelfItem] = []
-            var failedCount = 0
             
-            for (index, jsonItem) in jsonArray.enumerated() {
+            for (_, jsonItem) in jsonArray.enumerated() {
                 do {
                     let itemData = try JSONSerialization.data(withJSONObject: jsonItem)
                     let item = try decoder.decode(ShelfItem.self, from: itemData)
                     validItems.append(item)
                 } catch {
-                    failedCount += 1
-                    print("⚠️ Failed to decode shelf item at index \(index): \(error.localizedDescription)")
+                    // Skip corrupted items silently
                 }
-            }
-            
-            if failedCount > 0 {
-                print("📦 Successfully loaded \(validItems.count) shelf items, discarded \(failedCount) corrupted items")
             }
             
             return validItems
         } catch {
-            print("❌ Failed to parse shelf persistence file: \(error.localizedDescription)")
             return []
         }
     }
@@ -75,7 +67,7 @@ final class ShelfPersistenceService {
             let data = try encoder.encode(items)
             try data.write(to: fileURL, options: Data.WritingOptions.atomic)
         } catch {
-            print("Failed to save shelf items: \(error.localizedDescription)")
+            // Silently ignore save errors
         }
     }
 }

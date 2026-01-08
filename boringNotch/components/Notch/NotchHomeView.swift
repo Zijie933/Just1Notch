@@ -416,6 +416,39 @@ struct VolumeControlView: View {
     }
 }
 
+// MARK: - JSON Viewer Button
+
+struct JSONViewerButton: View {
+    var body: some View {
+        Button(action: {
+            let clipboardText = NSPasteboard.general.string(forType: .string) ?? ""
+            Task { @MainActor in
+                if clipboardText.isEmpty {
+                    JSONViewerWindowController.shared.showWindow(with: "剪贴板为空，请先复制 JSON 文本")
+                } else {
+                    JSONViewerWindowController.shared.showWindow(with: clipboardText)
+                }
+            }
+        }) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12.0)
+                    .fill(.black)
+                    .frame(width: 70, height: 70)
+                VStack(spacing: 8) {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20)
+                    Text("JSON")
+                        .font(.body)
+                }
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+        .shadow(color: .black.opacity(0.5), radius: 10)
+    }
+}
+
 // MARK: - Main View
 
 struct NotchHomeView: View {
@@ -428,7 +461,11 @@ struct NotchHomeView: View {
     var body: some View {
         Group {
             if !coordinator.firstLaunch {
-                mainContent
+                if hasAnyContent {
+                    mainContent
+                } else {
+                    emptyStateView
+                }
             }
         }
         // simplified: use a straightforward opacity transition
@@ -438,29 +475,59 @@ struct NotchHomeView: View {
     private var shouldShowCamera: Bool {
         Defaults[.showMirror] && webcamManager.cameraAvailable && vm.isCameraExpanded
     }
+    
+    private var hasAnyContent: Bool {
+        Defaults[.showMusicPlayer] || Defaults[.showCalendar] || shouldShowCamera || Defaults[.showJSONViewer]
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 32))
+                .foregroundStyle(.gray.opacity(0.6))
+            Text("在设置中启用功能")
+                .font(.headline)
+                .foregroundStyle(.gray.opacity(0.8))
+            Text("音乐播放器、日历、镜子或 JSON 查看器")
+                .font(.caption)
+                .foregroundStyle(.gray.opacity(0.5))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .blur(radius: vm.notchState == .closed ? 30 : 0)
+    }
 
     private var mainContent: some View {
-        HStack(alignment: .top, spacing: (shouldShowCamera && Defaults[.showCalendar]) ? 10 : 15) {
-            MusicPlayerView(albumArtNamespace: albumArtNamespace)
+        VStack(spacing: 12) {
+            HStack(alignment: .top, spacing: (shouldShowCamera && Defaults[.showCalendar]) ? 10 : 15) {
+                if Defaults[.showMusicPlayer] {
+                    MusicPlayerView(albumArtNamespace: albumArtNamespace)
+                }
 
-            if Defaults[.showCalendar] {
-                CalendarView()
-                    .frame(width: shouldShowCamera ? 170 : 215)
-                    .onHover { isHovering in
-                        vm.isHoveringCalendar = isHovering
-                    }
-                    .environmentObject(vm)
-                    .transition(.opacity)
-            }
+                if Defaults[.showCalendar] {
+                    CalendarView()
+                        .frame(width: shouldShowCamera ? 170 : 215)
+                        .onHover { isHovering in
+                            vm.isHoveringCalendar = isHovering
+                        }
+                        .environmentObject(vm)
+                        .transition(.opacity)
+                }
 
-            if shouldShowCamera {
-                CameraPreviewView(webcamManager: webcamManager)
-                    .scaledToFit()
-                    .opacity(vm.notchState == .closed ? 0 : 1)
-                    .blur(radius: vm.notchState == .closed ? 20 : 0)
-                    .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.76, blendDuration: 0), value: shouldShowCamera)
+                if shouldShowCamera {
+                    CameraPreviewView(webcamManager: webcamManager)
+                        .scaledToFit()
+                        .opacity(vm.notchState == .closed ? 0 : 1)
+                        .blur(radius: vm.notchState == .closed ? 20 : 0)
+                        .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.76, blendDuration: 0), value: shouldShowCamera)
+                }
+                
+                // JSON Viewer 按钮
+                if Defaults[.showJSONViewer] {
+                    JSONViewerButton()
+                }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
         .blur(radius: vm.notchState == .closed ? 30 : 0)
     }

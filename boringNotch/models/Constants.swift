@@ -73,7 +73,7 @@ extension Defaults.Keys {
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
-    static let releaseName = Key<String>("releaseName", default: "Flying Rabbit 🐇🪽")
+    static let releaseName = Key<String>("releaseName", default: "Jack933 Edition 🚀")
     
     // MARK: Behavior
     static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)
@@ -100,6 +100,7 @@ extension Defaults.Keys {
     static let showMirror = Key<Bool>("showMirror", default: false)
     static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
     static let settingsIconInNotch = Key<Bool>("settingsIconInNotch", default: true)
+    static let showJSONViewer = Key<Bool>("showJSONViewer", default: true)
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)
@@ -119,10 +120,13 @@ extension Defaults.Keys {
     
     // MARK: Gestures
     static let enableGestures = Key<Bool>("enableGestures", default: true)
+    static let openGestureEnabled = Key<Bool>("openGestureEnabled", default: true)
     static let closeGestureEnabled = Key<Bool>("closeGestureEnabled", default: true)
+    static let tabSwitchGestureEnabled = Key<Bool>("tabSwitchGestureEnabled", default: true)
     static let gestureSensitivity = Key<CGFloat>("gestureSensitivity", default: 200.0)
     
     // MARK: Media playback
+    static let showMusicPlayer = Key<Bool>("showMusicPlayer", default: true)
     static let coloredSpectrogram = Key<Bool>("coloredSpectrogram", default: true)
     static let enableSneakPeek = Key<Bool>("enableSneakPeek", default: false)
     static let sneakPeekStyles = Key<SneakPeekStyle>("sneakPeekStyles", default: .standard)
@@ -165,11 +169,16 @@ extension Defaults.Keys {
     // MARK: Shelf
     static let boringShelf = Key<Bool>("boringShelf", default: true)
     static let openShelfByDefault = Key<Bool>("openShelfByDefault", default: true)
+    static let openShelfWhenHasItems = Key<Bool>("openShelfWhenHasItems", default: true)
+    static let openShelfOnDrop = Key<Bool>("openShelfOnDrop", default: true)
     static let shelfTapToOpen = Key<Bool>("shelfTapToOpen", default: true)
     static let quickShareProvider = Key<String>("quickShareProvider", default: QuickShareProvider.defaultProvider.id)
     static let copyOnDrag = Key<Bool>("copyOnDrag", default: false)
     static let autoRemoveShelfItems = Key<Bool>("autoRemoveShelfItems", default: false)
     static let expandedDragDetection = Key<Bool>("expandedDragDetection", default: true)
+    static let showQuickShare = Key<Bool>("showQuickShare", default: true)
+    static let showTrashDropZone = Key<Bool>("showTrashDropZone", default: true)
+    static let trashDeletesOriginalFile = Key<Bool>("trashDeletesOriginalFile", default: false)
     
     // MARK: Calendar
     static let calendarSelectionState = Key<CalendarSelectionState>("calendarSelectionState", default: .all)
